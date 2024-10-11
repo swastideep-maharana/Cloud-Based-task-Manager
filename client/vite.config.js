@@ -8,8 +8,11 @@ export default defineConfig({
   server: {
     port: 3000,
     proxy: {
-      "/api": "http://localhost:8800",
-      changeOrigin: true,
+      "/api": {
+        target: "http://localhost:8800",
+        changeOrigin: true, // Moved inside the proxy object for "/api"
+        rewrite: (path) => path.replace(/^\/api/, ""), // Optional: removes "/api" from the proxied request path
+      },
     },
   },
 });
