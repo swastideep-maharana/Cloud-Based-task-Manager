@@ -8,6 +8,7 @@ import {
   useNavigate,
 } from "react-router-dom";
 import { useForm } from "react-hook-form";
+import Textbox from "../components/Textbox";
 
 const Login = () => {
   const user = "";
@@ -19,6 +20,9 @@ const Login = () => {
 
   const navigate = useNavigate();
 
+  const submitHandler = async (data) => {
+    console.log("submit");
+  };
   useEffect(() => {
     user && navigate("/dashboard");
   }, [user]);
@@ -43,7 +47,36 @@ const Login = () => {
           </div>
         </div>
         {/* Right Side */}
-        <div></div>
+
+        <div className="w-full md:w-1/3 p-4 md:p-1 flex flex-col justify-center items-center">
+          <form
+            onSubmit={handleSubmit(submitHandler)}
+            className="form-container w-full md:w-[400px] flex flex-col gap-y-8 bg-white px-10 pt-14 pb-14"
+          >
+            <div className="">
+              <p className="text-blue-600 text-3xl font-bold text-center">
+                Welcome back!
+              </p>
+              <p className="text-center text-base text-gray-700">
+                Keep all your creadential safe.
+              </p>
+            </div>
+
+            <div className="flex flex-col gap-y-5">
+              <Textbox
+                placeholder="email@example.com"
+                type="email"
+                name="email"
+                lable="Email Address"
+                className="w-full rounded-full"
+                register={register("email", {
+                  required: "Email Address is required",
+                })}
+                errors={errors.email ? errors.email.message : ""}
+              />
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   );
