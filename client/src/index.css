@@ -27,7 +27,7 @@
 }
 
 .rotate-in-up-left {
-  animation: rotate-in-up-left 2s ease infinite;
+  animation: rotate-in-up-left 2s ease ;
 }
 
 @keyframes rotate-in-up-left {
