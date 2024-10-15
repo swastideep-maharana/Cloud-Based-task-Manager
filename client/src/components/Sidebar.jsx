@@ -3,6 +3,7 @@ import {
   MdDashboard,
   MdOutlineAddTask,
   MdOutlinePendingActions,
+  MdSettings,
   MdTaskAlt,
 } from "react-icons/md";
 import { FaTasks, FaTrashAlt, FaUsers } from "react-icons/fa";
@@ -74,7 +75,9 @@ const Sidebar = () => {
         onClick={closeSidebar}
         className={clsx(
           "w-full lg:w-3/4 flex gap-2 px-3 py-2 rounded-full items-center text-gray-800 text-base hover:bg-[#564ed2]",
-          currentPath === el.path.split("/")[0] ? "bg-blue-700 text-white" : ""
+          currentPath === el.path.split("/")[0]
+            ? "bg-blue-700 text-neutral-100"
+            : ""
         )}
       >
         {el.icon}
@@ -96,6 +99,13 @@ const Sidebar = () => {
         {SidebarLinks.map((link) => (
           <NavLink key={link.label} el={link} />
         ))}
+      </div>
+
+      <div className="">
+        <button className="w-full flex gap-2 p-2 items-center text-lg text-gray-800 dark:text-white">
+          <MdSettings />
+          <span>Settings</span>
+        </button>
       </div>
     </div>
   );
