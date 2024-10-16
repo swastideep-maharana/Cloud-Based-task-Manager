@@ -47,42 +47,43 @@ const MobileSideBar = () => {
   };
 
   return (
-    <>
-      <Transition
-        show={isSideBarOpen}
-        as={Fragment}
-        enter="transition-opacity duration-700"
-        enterFrom="opacity-0"
-        enterTo="opacity-100"
-        leave="transition-opacity duration-700"
-        leaveFrom="opacity-100"
-        leaveTo="opacity-0"
+    <Transition
+      show={isSideBarOpen}
+      as={Fragment}
+      enter="transition-opacity duration-700"
+      enterFrom="opacity-0"
+      enterTo="opacity-100"
+      leave="transition-opacity duration-700"
+      leaveFrom="opacity-100"
+      leaveTo="opacity-0"
+    >
+      <div
+        ref={mobileMenuRef}
+        className={clsx(
+          "fixed inset-0 z-30 md:hidden w-full h-full bg-black/40 transition-all duration-700 transform",
+          isSideBarOpen ? "translate-x-0" : "translate-x-full"
+        )}
+        onClick={closeSidebar}
       >
         <div
-          ref={(mobileMenuRef.current = Node)}
-          className={clsx(
-            "md:hidden w-full h-full bg-black/40 transition-all duration-700 transform",
-            isSideBarOpen ? "translate-x-0" : "translate-x-full"
-          )}
-          onClick={closeSidebar}
+          className="bg-white w-3/4 h-full"
+          onClick={(e) => e.stopPropagation()} // Prevents sidebar from closing when clicking inside it
         >
-          <div className="bg-white w-3/4 h-full">
-            <div className="w-full flex justify-end px-5 mt-5">
-              <button
-                onClick={() => closeSidebar()}
-                className="flex justify-end items-end"
-              >
-                <IoClose size={25} />
-              </button>
-            </div>
+          <div className="w-full flex justify-end px-5 mt-5">
+            <button
+              onClick={closeSidebar}
+              className="flex justify-end items-end"
+            >
+              <IoClose size={25} />
+            </button>
+          </div>
 
-            <div className="-mt-10">
-              <Sidebar />
-            </div>
+          <div className="-mt-10">
+            <Sidebar />
           </div>
         </div>
-      </Transition>
-    </>
+      </div>
+    </Transition>
   );
 };
 

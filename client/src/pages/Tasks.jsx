@@ -72,6 +72,8 @@ const Tasks = () => {
           }
 
         </Tabs>
+
+        <AddTask open={open} setOpen={setOpen} />
       </div>
     </div>
   );
