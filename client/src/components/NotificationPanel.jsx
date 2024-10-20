@@ -5,46 +5,35 @@ import { BiSolidMessageRounded } from "react-icons/bi";
 import { HiBellAlert } from "react-icons/hi2";
 import { IoIosNotificationsOutline } from "react-icons/io";
 import { Link } from "react-router-dom";
+import {
+  useGetNotificationQuery,
+  useMarkNotiAsReadMutation,
+} from "../redux/slices/api/userApiSlice";
 
+// Dummy data (can be removed in real use)
 const data = [
   {
     _id: "65c5bbf3787832cf99f28e6d",
-    team: [
-      "65c202d4aa62f32ffd1303cc",
-      "65c27a0e18c0a1b750ad5cad",
-      "65c30b96e639681a13def0b5",
-    ],
-    text: "New task has been assigned to you and 2 others. The task priority is set a normal priority, so check and act accordingly. The task date is Thu Feb 29 2024. Thank you!!!",
+    text: "New task has been assigned to you...",
     task: null,
     notiType: "alert",
     isRead: [],
     createdAt: "2024-02-09T05:45:23.353Z",
-    updatedAt: "2024-02-09T05:45:23.353Z",
-    __v: 0,
   },
   {
     _id: "65c5f12ab5204a81bde866ab",
-    team: [
-      "65c202d4aa62f32ffd1303cc",
-      "65c30b96e639681a13def0b5",
-      "65c317360fd860f958baa08e",
-    ],
-    text: "New task has been assigned to you and 2 others. The task priority is set a high priority, so check and act accordingly. The task date is Fri Feb 09 2024. Thank you!!!",
-    task: {
-      _id: "65c5f12ab5204a81bde866a9",
-      title: "Test task",
-    },
+    text: "High priority task assigned to you.",
+    task: { title: "Test task" },
     notiType: "alert",
     isRead: [],
     createdAt: "2024-02-09T09:32:26.810Z",
-    updatedAt: "2024-02-09T09:32:26.810Z",
-    __v: 0,
   },
 ];
 
+// Icon mapping
 const ICONS = {
   alert: (
-    <HiBellAlert className="h-5 w-5 text-gray-600 group-hover:text-indigo-600 " />
+    <HiBellAlert className="h-5 w-5 text-gray-600 group-hover:text-indigo-600" />
   ),
   message: (
     <BiSolidMessageRounded className="h-5 w-5 text-gray-600 group-hover:text-indigo-600" />
@@ -58,22 +47,29 @@ const NotificationPanel = () => {
   const { data, refetch } = useGetNotificationQuery();
   const [markAsRead] = useMarkNotiAsReadMutation();
 
-  const readHandler = () => {};
-  const viewHandler = () => {};
+  const readHandler = async (type, id) => {
+    await markAsRead({ type, id }).unwrap();
+    refetch();
+  };
 
-  const callToAction = [
+  const viewHandler = async (el) => {
+    setSelected(el);
+    readHandler("one", el._id);
+    setOpen(true);
+  };
+
+  const callsToAction = [
     { name: "Cancel", href: "#", icon: "" },
     {
       name: "Mark All Read",
       href: "#",
-      icon: "",
-      onclick: () => readHandler("all", ""),
+      onClick: () => readHandler("all", ""),
     },
   ];
 
   return (
     <>
-      <Popover className={relative}>
+      <Popover className="relative">
         <Popover.Button className="inline-flex items-center outline-none">
           <div className="w-8 h-8 flex items-center justify-center text-gray-800 relative">
             <IoIosNotificationsOutline className="text-2xl" />
@@ -84,6 +80,7 @@ const NotificationPanel = () => {
             )}
           </div>
         </Popover.Button>
+
         <Transition
           as={Fragment}
           enter="transition ease-out duration-200"
@@ -93,7 +90,7 @@ const NotificationPanel = () => {
           leaveFrom="opacity-100 translate-y-0"
           leaveTo="opacity-0 translate-y-1"
         >
-          <Popover.Panel className="absolute -right-16 md:-right-2 z-10 mt-5 flex w-screen max-w-max  px-4">
+          <Popover.Panel className="absolute -right-16 md:-right-2 z-10 mt-5 flex w-screen max-w-max px-4">
             {({ close }) =>
               data?.length > 0 && (
                 <div className="w-screen max-w-md flex-auto overflow-hidden rounded-3xl bg-white text-sm leading-6 shadow-lg ring-1 ring-gray-900/5">
@@ -112,7 +109,7 @@ const NotificationPanel = () => {
                           onClick={() => viewHandler(item)}
                         >
                           <div className="flex items-center gap-3 font-semibold text-gray-900 capitalize">
-                            <p> {item.notiType}</p>
+                            <p>{item.notiType}</p>
                             <span className="text-xs font-normal lowercase">
                               {moment(item.createdAt).fromNow()}
                             </span>
@@ -144,7 +141,36 @@ const NotificationPanel = () => {
           </Popover.Panel>
         </Transition>
       </Popover>
+
+      <ViewNotification open={open} setOpen={setOpen} selected={selected} />
     </>
+  );
+};
+
+// ViewNotification component for modal
+const ViewNotification = ({ open, setOpen, selected }) => {
+  if (!selected) return null;
+
+  return (
+    <div
+      className={`fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center ${
+        open ? "block" : "hidden"
+      }`}
+    >
+      <div className="bg-white p-6 rounded shadow-lg max-w-md w-full">
+        <h2 className="text-xl font-bold mb-4">Notification Details</h2>
+        <p>{selected.text}</p>
+        {selected?.task?.title && (
+          <p className="font-semibold mt-2">Task: {selected.task.title}</p>
+        )}
+        <button
+          className="mt-4 bg-blue-500 text-white py-2 px-4 rounded"
+          onClick={() => setOpen(false)}
+        >
+          Close
+        </button>
+      </div>
+    </div>
   );
 };
 

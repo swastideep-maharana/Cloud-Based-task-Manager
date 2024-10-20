@@ -7,11 +7,11 @@ import {
   MdKeyboardDoubleArrowUp,
   MdOutlineRestore,
 } from "react-icons/md";
-import { tasks } from "../assets/data";
+import { tasks } from "../assets/data"; // Adjust this import based on how you fetch your tasks
 import Title from "../components/Title";
 import Button from "../components/Button";
 import { PRIOTITYSTYELS, TASK_TYPE } from "../utils";
-import AddUser from "../components/AddUser";
+import AddUser from "../components/AddUser"; // Unused import? Consider removing it
 import ConfirmatioDialog from "../components/Dialogs";
 
 const ICONS = {
@@ -22,14 +22,13 @@ const ICONS = {
 
 const Trash = () => {
   const [openDialog, setOpenDialog] = useState(false);
-  const [open, setOpen] = useState(false);
   const [msg, setMsg] = useState(null);
   const [type, setType] = useState("delete");
   const [selected, setSelected] = useState("");
 
   const deleteAllClick = () => {
     setType("deleteAll");
-    setMsg("Do you want to permenantly delete all items?");
+    setMsg("Do you want to permanently delete all items?");
     setOpenDialog(true);
   };
 
@@ -42,6 +41,7 @@ const Trash = () => {
   const deleteClick = (id) => {
     setType("delete");
     setSelected(id);
+    setMsg("Do you want to delete the selected item?");
     setOpenDialog(true);
   };
 
@@ -52,9 +52,33 @@ const Trash = () => {
     setOpenDialog(true);
   };
 
+  const deleteRestoreHandler = () => {
+    switch (type) {
+      case "delete":
+        // Add logic to delete the selected task
+        console.log(`Delete task with id: ${selected}`);
+        break;
+      case "restore":
+        // Add logic to restore the selected task
+        console.log(`Restore task with id: ${selected}`);
+        break;
+      case "deleteAll":
+        // Add logic to delete all tasks
+        console.log("Delete all tasks");
+        break;
+      case "restoreAll":
+        // Add logic to restore all tasks
+        console.log("Restore all tasks");
+        break;
+      default:
+        break;
+    }
+    setOpenDialog(false); // Close the dialog after the action
+  };
+
   const TableHeader = () => (
     <thead className="border-b border-gray-300">
-      <tr className="text-black  text-left">
+      <tr className="text-black text-left">
         <th className="py-2">Task Title</th>
         <th className="py-2">Priority</th>
         <th className="py-2">Stage</th>
@@ -77,11 +101,11 @@ const Trash = () => {
       </td>
 
       <td className="py-2 capitalize">
-        <div className={"flex gap-1 items-center"}>
+        <div className="flex gap-1 items-center">
           <span className={clsx("text-lg", PRIOTITYSTYELS[item?.priority])}>
             {ICONS[item?.priority]}
           </span>
-          <span className="">{item?.priority}</span>
+          <span>{item?.priority}</span>
         </div>
       </td>
 
@@ -113,14 +137,14 @@ const Trash = () => {
             <Button
               label="Restore All"
               icon={<MdOutlineRestore className="text-lg hidden md:flex" />}
-              className="flex flex-row-reverse gap-1 items-center  text-black text-sm md:text-base rounded-md 2xl:py-2.5"
-              onClick={() => restoreAllClick()}
+              className="flex flex-row-reverse gap-1 items-center text-black text-sm md:text-base rounded-md 2xl:py-2.5"
+              onClick={restoreAllClick}
             />
             <Button
               label="Delete All"
               icon={<MdDelete className="text-lg hidden md:flex" />}
-              className="flex flex-row-reverse gap-1 items-center  text-red-600 text-sm md:text-base rounded-md 2xl:py-2.5"
-              onClick={() => deleteAllClick()}
+              className="flex flex-row-reverse gap-1 items-center text-red-600 text-sm md:text-base rounded-md 2xl:py-2.5"
+              onClick={deleteAllClick}
             />
           </div>
         </div>
@@ -129,16 +153,14 @@ const Trash = () => {
             <table className="w-full mb-5">
               <TableHeader />
               <tbody>
-                {tasks?.map((tk, id) => (
-                  <TableRow key={id} item={tk} />
+                {tasks?.map((tk) => (
+                  <TableRow key={tk._id} item={tk} /> // Changed to use tk._id
                 ))}
               </tbody>
             </table>
           </div>
         </div>
       </div>
-
-      {/* <AddUser open={open} setOpen={setOpen} /> */}
 
       <ConfirmatioDialog
         open={openDialog}
@@ -147,7 +169,7 @@ const Trash = () => {
         setMsg={setMsg}
         type={type}
         setType={setType}
-        onClick={() => deleteRestoreHandler()}
+        onClick={deleteRestoreHandler}
       />
     </>
   );

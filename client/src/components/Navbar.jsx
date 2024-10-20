@@ -1,6 +1,7 @@
 import React from "react";
 import { MdOutlineSearch } from "react-icons/md";
 import { useDispatch, useSelector } from "react-redux";
+import { setOpenSidebar } from "../redux/slices/authSlice";
 import UserAvatar from "./UserAvatar";
 import NotificationPanel from "./NotificationPanel";
 
@@ -23,7 +24,7 @@ const Navbar = () => {
 
           <input
             type="text"
-            placeholder="Search....."
+            placeholder="Search...."
             className="flex-1 outline-none bg-transparent placeholder:text-gray-500 text-gray-800"
           />
         </div>

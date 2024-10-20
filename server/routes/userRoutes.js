@@ -1,35 +1,17 @@
 import express from "express";
-import { isAdminRoute, protectRoute } from "../middlewares/authMiddlewave.js";
-import {
-  activateUserProfile,
-  changeUserPassword,
-  deleteUserProfile,
-  getNotificationsList,
-  getTeamList,
-  loginUser,
-  logoutUser,
-  markNotificationRead,
-  registerUser,
-  updateUserProfile,
-} from "../controllers/userController.js";
+import { userController } from "../controllers/userController.js";
 
 const router = express.Router();
 
-router.post("/register", registerUser);
-router.post("/login", loginUser);
-router.post("/logout", logoutUser);
-
-router.get("/get-team", protectRoute, isAdminRoute, getTeamList);
-router.get("/notifications", protectRoute, getNotificationsList);
-
-router.put("/profile", protectRoute, updateUserProfile);
-router.put("/read-noti", protectRoute, markNotificationRead);
-router.put("/change-password", protectRoute, changeUserPassword);
-
-// //   FOR ADMIN ONLY - ADMIN ROUTES
-router
-  .route("/:id")
-  .put(protectRoute, isAdminRoute, activateUserProfile)
-  .delete(protectRoute, isAdminRoute, deleteUserProfile);
+router.post("/register", userController.registerUser);
+router.post("/login", userController.loginUser);
+router.post("/logout", userController.logoutUser);
+router.get("/team", userController.getTeamList);
+router.get("/notifications", userController.getNotificationsList);
+router.put("/profile", userController.updateUserProfile);
+router.put("/notification", userController.markNotificationRead);
+router.put("/password", userController.changeUserPassword);
+router.put("/activate/:id", userController.activateUserProfile); // Ensure the method is correctly referenced
+router.delete("/delete/:id", userController.deleteUserProfile);
 
 export default router;
