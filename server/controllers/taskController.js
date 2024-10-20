@@ -7,10 +7,9 @@ export const createTask = async (req, res) => {
     const { userId } = req.user;
     const { title, team, stage, date, priority, assets } = req.body;
 
-    let text = `New task has been assigned to you and ${
+    const text = `New task has been assigned to you and ${
       team.length - 1
-    } others.`;
-    text += ` The task priority is set at ${priority} priority. Task date: ${new Date(
+    } others. The task priority is set at ${priority} priority. Task date: ${new Date(
       date
     ).toDateString()}.`;
 
@@ -27,7 +26,7 @@ export const createTask = async (req, res) => {
       date,
       priority: priority.toLowerCase(),
       assets,
-      activities: [activity], // Fixed the format to match array structure
+      activities: [activity],
     });
 
     await Notice.create({
@@ -58,12 +57,10 @@ export const duplicateTask = async (req, res) => {
 
     const newTask = await Task.create({
       ...task.toObject(),
-      title: task.title + " - Duplicate",
+      title: `${task.title} - Duplicate`,
     });
 
-    await newTask.save();
-
-    let text = `New task has been assigned to you and ${
+    const text = `New task has been assigned to you and ${
       task.team.length - 1
     } others. The task priority is ${
       task.priority
@@ -97,10 +94,7 @@ export const postTaskActivity = async (req, res) => {
     const { type, activity } = req.body;
 
     const task = await Task.findById(id);
-
-    const data = { type, activity, by: userId };
-
-    task.activities.push(data);
+    task.activities.push({ type, activity, by: userId });
 
     await task.save();
 
@@ -123,13 +117,13 @@ export const dashboardStatistics = async (req, res) => {
   try {
     const { userId, isAdmin } = req.user;
 
-    const allTasks = isAdmin
-      ? await Task.find({ isTrashed: false })
-          .populate({ path: "team", select: "name role title email" })
-          .sort({ _id: -1 })
-      : await Task.find({ isTrashed: false, team: { $all: [userId] } })
-          .populate({ path: "team", select: "name role title email" })
-          .sort({ _id: -1 });
+    const query = isAdmin
+      ? { isTrashed: false }
+      : { isTrashed: false, team: { $all: [userId] } };
+
+    const allTasks = await Task.find(query)
+      .populate({ path: "team", select: "name role title email" })
+      .sort({ _id: -1 });
 
     const users = await User.find({ isActive: true })
       .select("name title role isAdmin createdAt")
@@ -150,12 +144,9 @@ export const dashboardStatistics = async (req, res) => {
       }, {})
     ).map(([name, total]) => ({ name, total }));
 
-    const totalTasks = allTasks.length;
-    const last10Task = allTasks.slice(0, 10);
-
     const summary = {
-      totalTasks,
-      last10Task,
+      totalTasks: allTasks.length,
+      last10Task: allTasks.slice(0, 10),
       users: isAdmin ? users : [],
       tasks: groupTasks,
       graphData: groupData,
@@ -178,7 +169,7 @@ export const getTasks = async (req, res) => {
   try {
     const { stage, isTrashed } = req.query;
 
-    let query = { isTrashed: isTrashed ? true : false };
+    const query = { isTrashed: isTrashed === "true" };
 
     if (stage) {
       query.stage = stage;

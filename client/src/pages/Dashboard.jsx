@@ -229,8 +229,8 @@ const Dashboard = () => {
       </div>
 
       <div className="w-full flex flex-col md:flex-row gap-4 2xl:gap-10 py-8">
-        <TaskTable tasks={summary.last10Task} />
-        <UserTable users={summary.users} />
+        <TaskTable tasks={data?.last10Task} />
+        <UserTable users={data?.users} />
       </div>
     </div>
   );

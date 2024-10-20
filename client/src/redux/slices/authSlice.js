@@ -1,10 +1,13 @@
 import { createSlice } from "@reduxjs/toolkit";
 
-const initialState = {
-  user: localStorage.getItem("userInfo")
-    ? JSON.parse(localStorage.getItem("userInfo"))
-    : null,
+// Function to retrieve userInfo from localStorage
+const getUserInfo = () => {
+  const userInfo = localStorage.getItem("userInfo");
+  return userInfo ? JSON.parse(userInfo) : null;
+};
 
+const initialState = {
+  user: getUserInfo(),
   isSideBarOpen: false,
 };
 
@@ -16,7 +19,7 @@ const authSlice = createSlice({
       state.user = action.payload;
       localStorage.setItem("userInfo", JSON.stringify(action.payload));
     },
-    logout: (state, action) => {
+    logout: (state) => {
       state.user = null;
       localStorage.removeItem("userInfo");
     },
@@ -26,5 +29,8 @@ const authSlice = createSlice({
   },
 });
 
+// Export actions for use in components
 export const { setCredentials, logout, setOpenSidebar } = authSlice.actions;
+
+// Export the reducer as the default export
 export default authSlice.reducer;

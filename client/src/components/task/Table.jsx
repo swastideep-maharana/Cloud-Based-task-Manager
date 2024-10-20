@@ -20,7 +20,7 @@ const ICONS = {
   low: <MdKeyboardArrowDown />,
 };
 
-const Table = ({ tasks }) => {
+const Table = ({ tasks = [] }) => { // Default tasks to an empty array
   const [openDialog, setOpenDialog] = useState(false);
   const [selected, setSelected] = useState(null);
 
@@ -29,11 +29,13 @@ const Table = ({ tasks }) => {
     setOpenDialog(true);
   };
 
-  const deleteHandler = () => {};
+  const deleteHandler = () => {
+    // Implement delete logic here
+  };
 
   const TableHeader = () => (
     <thead className="w-full border-b border-gray-300">
-      <tr className="w-full text-black  text-left">
+      <tr className="w-full text-black text-left">
         <th className="py-2">Task Title</th>
         <th className="py-2">Priority</th>
         <th className="py-2 line-clamp-1">Created At</th>
@@ -92,12 +94,12 @@ const Table = ({ tasks }) => {
 
       <td className="py-2">
         <div className="flex">
-          {task?.team?.map((m, index) => (
+          {task?.team?.map((m, index) => ( // Pass index here
             <div
               key={m._id}
               className={clsx(
                 "w-7 h-7 rounded-full text-white flex items-center justify-center text-sm -mr-1",
-                BGS[index % BGS?.length]
+                BGS[index % BGS.length] // Use the index here
               )}
             >
               <UserInfo user={m} />
@@ -122,16 +124,25 @@ const Table = ({ tasks }) => {
       </td>
     </tr>
   );
+
   return (
     <>
-      <div className="bg-white  px-2 md:px-4 pt-4 pb-9 shadow-md rounded">
+      <div className="bg-white px-2 md:px-4 pt-4 pb-9 shadow-md rounded">
         <div className="overflow-x-auto">
-          <table className="w-full ">
+          <table className="w-full">
             <TableHeader />
             <tbody>
-              {tasks.map((task, index) => (
-                <TableRow key={index} task={task} />
-              ))}
+              {tasks.length ? (
+                tasks.map((task) => (
+                  <TableRow key={task._id} task={task} />
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={5} className="py-4 text-center text-gray-600">
+                    No tasks available.
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>

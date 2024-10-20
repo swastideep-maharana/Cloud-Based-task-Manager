@@ -9,17 +9,60 @@ import { Menu, Transition } from "@headlessui/react";
 import AddTask from "./AddTask";
 import AddSubTask from "./AddSubTask";
 import ConfirmatioDialog from "../Dialogs";
+import {
+  useTrashTaskMutation,
+  useUpdateTaskMutation,
+  useDuplicateTaskMutation,
+} from "../../redux/slices/api/taskApiSlice";
+import { toast } from "sonner";
 
 const TaskDialog = ({ task }) => {
   const [open, setOpen] = useState(false);
   const [openEdit, setOpenEdit] = useState(false);
   const [openDialog, setOpenDialog] = useState(false);
-
+  const [isLoading, setIsLoading] = useState(false); // State for loading
   const navigate = useNavigate();
 
-  const duplicateHandler = () => {};
-  const deleteClicks = () => {};
-  const deleteHandler = () => {};
+  const [deleteTask] = useTrashTaskMutation();
+  const [updateTask] = useUpdateTaskMutation();
+  const [duplicateTask] = useDuplicateTaskMutation();
+
+  const duplicateHandler = async () => {
+    setIsLoading(true); // Start loading
+    try {
+      const res = await duplicateTask(task._id).unwrap();
+      toast.success(res.message);
+      setOpenDialog(false);
+      // Update the local task list instead of reloading
+      // updateLocalTasks(res.newTask); // Assuming you have a function to update your task list
+    } catch (err) {
+      console.error("Duplicate Task Error:", err); // More detailed logging
+      toast.error(
+        err?.data?.message || "An error occurred while duplicating the task."
+      );
+    } finally {
+      setIsLoading(false); // End loading
+    }
+  };
+
+  const deleteClicks = () => {
+    setOpenDialog(true);
+  };
+
+  const deleteHandler = async () => {
+    try {
+      const res = await deleteTask({ id: task._id }).unwrap();
+      toast.success(res.message);
+      setOpenDialog(false);
+      // Update the local task list instead of reloading
+      // updateLocalTasksAfterDeletion(); // Assuming you have a function to update your task list
+    } catch (error) {
+      console.error("Delete Task Error:", error);
+      toast.error(
+        error?.data?.message || "An error occurred while deleting the task."
+      );
+    }
+  };
 
   const items = [
     {
@@ -40,7 +83,7 @@ const TaskDialog = ({ task }) => {
     {
       label: "Duplicate",
       icon: <HiDuplicate className="mr-2 h-5 w-5" aria-hidden="true" />,
-      onClick: () => duplicateHanlder(),
+      onClick: duplicateHandler,
     },
   ];
 
@@ -48,7 +91,7 @@ const TaskDialog = ({ task }) => {
     <>
       <div>
         <Menu as="div" className="relative inline-block text-left">
-          <Menu.Button className="inline-flex w-full justify-center rounded-md px-4 py-2 text-sm font-medium text-gray-600 ">
+          <Menu.Button className="inline-flex w-full justify-center rounded-md px-4 py-2 text-sm font-medium text-gray-600">
             <BsThreeDots />
           </Menu.Button>
 
@@ -67,7 +110,8 @@ const TaskDialog = ({ task }) => {
                   <Menu.Item key={el.label}>
                     {({ active }) => (
                       <button
-                        onClick={el?.onClick}
+                        onClick={el.onClick}
+                        disabled={isLoading} // Disable buttons while loading
                         className={`${
                           active ? "bg-blue-500 text-white" : "text-gray-900"
                         } group flex w-full items-center rounded-md px-2 py-2 text-sm`}
@@ -84,7 +128,8 @@ const TaskDialog = ({ task }) => {
                 <Menu.Item>
                   {({ active }) => (
                     <button
-                      onClick={() => deleteClicks()}
+                      onClick={deleteClicks}
+                      disabled={isLoading} // Disable button while loading
                       className={`${
                         active ? "bg-blue-500 text-white" : "text-red-900"
                       } group flex w-full items-center rounded-md px-2 py-2 text-sm`}
@@ -103,15 +148,8 @@ const TaskDialog = ({ task }) => {
         </Menu>
       </div>
 
-      <AddTask
-        open={openEdit}
-        setOpen={setOpenEdit}
-        task={task}
-        key={new Date().getTime()}
-      />
-
+      <AddTask open={openEdit} setOpen={setOpenEdit} task={task} />
       <AddSubTask open={open} setOpen={setOpen} />
-
       <ConfirmatioDialog
         open={openDialog}
         setOpen={setOpenDialog}
