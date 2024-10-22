@@ -1,39 +1,37 @@
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 
+// Function to establish a database connection
 export const dbConnection = async () => {
   try {
-    const options = {
+    await mongoose.connect(process.env.MONGODB_URI, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
-    };
-
-    await mongoose.connect(process.env.MONGODB_URI, options);
+    });
     console.log("DB connection established");
   } catch (error) {
     console.error("DB Error: ", error.message); // Log error message
   }
 };
 
-export const createJWT = (res, userId, additionalData = {}) => {
+// Function to create a JWT token
+export const createJWT = (res, userId) => {
   if (!process.env.JWT_SECRET) {
-    throw new Error("JWT_SECRET is not defined in environment variables");
+    console.error("JWT_SECRET is not defined in environment variables.");
+    return;
   }
 
-  const token = jwt.sign(
-    { userId, ...additionalData },
-    process.env.JWT_SECRET,
-    {
-      expiresIn: "1d",
-    }
-  );
+  const token = jwt.sign({ userId }, process.env.JWT_SECRET, {
+    expiresIn: "1d",
+  });
 
-  // Change sameSite from strict to none when you deploy your app
+  console.log(`JWT created with length: ${token.length}`);
+
   res.cookie("token", token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV !== "development",
-    sameSite: "strict", // Prevent CSRF attack
-    maxAge: 1 * 24 * 60 * 60 * 1000, // 1 day
+    secure: process.env.NODE_ENV === "production", // Only set secure in production
+    sameSite: "Strict", // Prevent CSRF attack
+    maxAge: 1 * 24 * 60 * 60 * 1000, // Cookie expiration time: 1 day
     path: "/", // Cookie path
   });
 };

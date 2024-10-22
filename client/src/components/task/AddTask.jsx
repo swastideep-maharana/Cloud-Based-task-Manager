@@ -19,17 +19,27 @@ import {
   useUpdateTaskMutation,
 } from "../../redux/slices/api/taskApiSlice";
 import { toast } from "sonner";
+import { dateFormatter } from "../../utils/index.js";
 
 const LISTS = ["TODO", "IN PROGRESS", "COMPLETED"];
 const PRIORITY = ["HIGH", "MEDIUM", "NORMAL", "LOW"];
 
 const AddTask = ({ open, setOpen, task }) => {
+  const defaultValues = {
+    title: task?.title || "",
+    date: dateFormatter(task?.date || new Date()),
+    team: [],
+    stage: "",
+    priority: "",
+    assets: [],
+  };
+
   const {
     register,
     handleSubmit,
     formState: { errors },
-    reset, // Add reset for resetting form state
-  } = useForm();
+    reset,
+  } = useForm({ defaultValues });
 
   const [team, setTeam] = useState([]);
   const [stage, setStage] = useState(LISTS[0]);
@@ -45,7 +55,7 @@ const AddTask = ({ open, setOpen, task }) => {
     if (task) {
       reset({
         title: task.title,
-        date: task.date,
+        date: dateFormatter(task.date),
       });
       setTeam(task.team || []);
       setStage(task.stage?.toUpperCase() || LISTS[0]);
@@ -57,7 +67,7 @@ const AddTask = ({ open, setOpen, task }) => {
     setUploading(true);
 
     try {
-      // Upload each file and store their URLs
+      // Upload files and prepare task data
       const uploadPromises = assets.map(uploadFile);
       const fileURLs = await Promise.all(uploadPromises);
       setUploadedFileURLs(fileURLs);
@@ -71,18 +81,23 @@ const AddTask = ({ open, setOpen, task }) => {
         priority,
       };
 
-      // Create or update task
-      const res = task
-        ? await updateTask({ ...taskData, _id: task._id }).unwrap()
-        : await createTask(taskData).unwrap();
+      console.log('Task Data:', taskData); // Log task data
 
-      toast.success(res.message);
+      // Check if it's an update or a new task
+      if (task && task._id) {
+        console.log('Updating task with ID:', task._id); // Log task ID
+        const res = await updateTask({ ...taskData, id: task._id }).unwrap();
+        toast.success(res.message);
+      } else {
+        const res = await createTask(taskData).unwrap();
+        toast.success(res.message);
+      }
+
       setOpen(false);
     } catch (err) {
       console.error("Error creating/updating task:", err);
-      toast.error(
-        err?.data?.message || err.error || "An unexpected error occurred."
-      );
+      console.error("Error response:", err?.data); // Log error response
+      toast.error(err?.data?.message || err.error || "An unexpected error occurred.");
     } finally {
       setUploading(false);
       setAssets([]);

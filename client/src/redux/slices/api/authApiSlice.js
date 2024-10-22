@@ -3,6 +3,7 @@ import { logout } from "../authSlice";
 
 const AUTH_URL = "/user";
 
+// Auth API slice
 export const authApiSlice = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     login: builder.mutation({
@@ -15,16 +16,14 @@ export const authApiSlice = apiSlice.injectEndpoints({
       async onQueryStarted(arg, { dispatch, queryFulfilled }) {
         try {
           const { data } = await queryFulfilled;
-          // Dispatch login success action
-          // Example: dispatch(loginSuccess(data));
+          if (data.token) {
+            localStorage.setItem("token", data.token); // Store token
+          }
         } catch (error) {
-          // Handle error
           console.error("Login failed:", error);
-          // Optionally dispatch an error action or set error state
         }
       },
     }),
-
     register: builder.mutation({
       query: (data) => ({
         url: `${AUTH_URL}/register`,
@@ -32,18 +31,17 @@ export const authApiSlice = apiSlice.injectEndpoints({
         body: data,
         credentials: "include",
       }),
-      async onQueryStarted(arg, { dispatch, queryFulfilled }) {
+      async onQueryStarted(arg, { queryFulfilled }) {
         try {
           const { data } = await queryFulfilled;
-          // Dispatch registration success action if applicable
-          // Example: dispatch(registerSuccess(data));
+          if (data.token) {
+            localStorage.setItem("token", data.token); // Store token
+          }
         } catch (error) {
           console.error("Registration failed:", error);
-          // Optionally dispatch an error action or set error state
         }
       },
     }),
-
     logout: builder.mutation({
       query: () => ({
         url: `${AUTH_URL}/logout`,
@@ -53,7 +51,8 @@ export const authApiSlice = apiSlice.injectEndpoints({
       async onQueryStarted(arg, { dispatch, queryFulfilled }) {
         try {
           await queryFulfilled;
-          dispatch(logout()); // Clear auth state on logout
+          localStorage.removeItem("token"); // Remove token on logout
+          dispatch(logout()); // Dispatch logout action
         } catch (error) {
           console.error("Logout failed:", error);
         }
@@ -62,4 +61,6 @@ export const authApiSlice = apiSlice.injectEndpoints({
   }),
 });
 
-export const { useLoginMutation, useRegisterMutation, useLogoutMutation } = authApiSlice;
+// Export hooks for usage in functional components
+export const { useLoginMutation, useRegisterMutation, useLogoutMutation } =
+  authApiSlice;

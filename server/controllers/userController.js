@@ -1,6 +1,7 @@
 import User from "../models/user.js";
 import { createJWT } from "../utils/index.js";
 import Notice from "../models/notification.js";
+import bcrypt from "bcryptjs";
 
 export const userController = {
   registerUser: async (req, res) => {
@@ -15,27 +16,30 @@ export const userController = {
         });
       }
 
+      // Hash the password before saving
+      const hashedPassword = await bcrypt.hash(password, 10);
+
       const user = await User.create({
         name,
         email,
-        password,
+        password: hashedPassword,
         isAdmin,
         role,
         title,
       });
 
-      if (user) {
-        isAdmin ? createJWT(res, user._id) : null;
-        user.password = undefined;
-        res.status(201).json(user);
-      } else {
-        return res
-          .status(400)
-          .json({ status: false, message: "Invalid user data" });
-      }
+      // Optionally create JWT for newly registered users
+      createJWT(res, user._id);
+
+      user.password = undefined; // Remove password from response
+      return res.status(201).json({
+        status: true,
+        message: "User registered successfully",
+        user,
+      });
     } catch (error) {
-      console.log(error);
-      return res.status(400).json({ status: false, message: error.message });
+      console.error(error);
+      return res.status(500).json({ status: false, message: "Server error" });
     }
   },
 
@@ -50,28 +54,28 @@ export const userController = {
           .json({ status: false, message: "Invalid email or password." });
       }
 
-      if (!user?.isActive) {
-        return res.status(401).json({
+      if (!user.isActive) {
+        return res.status(403).json({
           status: false,
           message:
             "User account has been deactivated, contact the administrator",
         });
       }
 
-      const isMatch = await user.matchPassword(password);
+      const isMatch = await bcrypt.compare(password, user.password);
 
-      if (user && isMatch) {
+      if (isMatch) {
         createJWT(res, user._id);
-        user.password = undefined;
-        res.status(200).json(user);
+        user.password = undefined; // Remove password from response
+        return res.status(200).json(user);
       } else {
         return res
           .status(401)
           .json({ status: false, message: "Invalid email or password" });
       }
     } catch (error) {
-      console.log(error);
-      return res.status(400).json({ status: false, message: error.message });
+      console.error(error);
+      return res.status(500).json({ status: false, message: "Server error" });
     }
   },
 
@@ -82,20 +86,22 @@ export const userController = {
         expires: new Date(0),
       });
 
-      res.status(200).json({ message: "Logout successful" });
+      return res
+        .status(200)
+        .json({ status: true, message: "Logout successful" });
     } catch (error) {
-      console.log(error);
-      return res.status(400).json({ status: false, message: error.message });
+      console.error(error);
+      return res.status(500).json({ status: false, message: "Server error" });
     }
   },
 
   getTeamList: async (req, res) => {
     try {
       const users = await User.find().select("name title role email isActive");
-      res.status(200).json(users);
+      return res.status(200).json(users);
     } catch (error) {
-      console.log(error);
-      return res.status(400).json({ status: false, message: error.message });
+      console.error(error);
+      return res.status(500).json({ status: false, message: "Server error" });
     }
   },
 
@@ -107,46 +113,43 @@ export const userController = {
         isRead: { $nin: [userId] },
       }).populate("task", "title");
 
-      res.status(201).json(notice);
+      return res.status(200).json(notice);
     } catch (error) {
-      console.log(error);
-      return res.status(400).json({ status: false, message: error.message });
+      console.error(error);
+      return res.status(500).json({ status: false, message: "Server error" });
     }
   },
 
   updateUserProfile: async (req, res) => {
     try {
       const { userId, isAdmin } = req.user;
-      const { _id } = req.body;
+      const { _id, name, title, role } = req.body;
 
-      const id =
-        isAdmin && userId === _id
-          ? userId
-          : isAdmin && userId !== _id
-          ? _id
-          : userId;
+      const id = isAdmin && userId === _id ? userId : _id || userId;
 
       const user = await User.findById(id);
 
       if (user) {
-        user.name = req.body.name || user.name;
-        user.title = req.body.title || user.title;
-        user.role = req.body.role || user.role;
+        user.name = name || user.name;
+        user.title = title || user.title;
+        user.role = role || user.role;
 
         const updatedUser = await user.save();
-        user.password = undefined;
+        updatedUser.password = undefined; // Remove password from response
 
-        res.status(201).json({
+        return res.status(200).json({
           status: true,
-          message: "Profile Updated Successfully.",
+          message: "Profile updated successfully.",
           user: updatedUser,
         });
       } else {
-        res.status(404).json({ status: false, message: "User not found" });
+        return res
+          .status(404)
+          .json({ status: false, message: "User not found" });
       }
     } catch (error) {
-      console.log(error);
-      return res.status(400).json({ status: false, message: error.message });
+      console.error(error);
+      return res.status(500).json({ status: false, message: "Server error" });
     }
   },
 
@@ -158,21 +161,31 @@ export const userController = {
       if (isReadType === "all") {
         await Notice.updateMany(
           { team: userId, isRead: { $nin: [userId] } },
-          { $push: { isRead: userId } },
-          { new: true }
+          { $addToSet: { isRead: userId } } // Use $addToSet to prevent duplicates
         );
       } else {
-        await Notice.findOneAndUpdate(
+        const notification = await Notice.findOneAndUpdate(
           { _id: id, isRead: { $nin: [userId] } },
-          { $push: { isRead: userId } },
+          { $addToSet: { isRead: userId } }, // Use $addToSet to prevent duplicates
           { new: true }
         );
+
+        if (!notification) {
+          return res
+            .status(404)
+            .json({
+              status: false,
+              message: "Notification not found or already read.",
+            });
+        }
       }
 
-      res.status(201).json({ status: true, message: "Done" });
+      return res
+        .status(200)
+        .json({ status: true, message: "Notifications marked as read." });
     } catch (error) {
-      console.log(error);
-      return res.status(400).json({ status: false, message: error.message });
+      console.error(error);
+      return res.status(500).json({ status: false, message: "Server error" });
     }
   },
 
@@ -182,20 +195,23 @@ export const userController = {
       const user = await User.findById(userId);
 
       if (user) {
-        user.password = req.body.password;
+        const hashedPassword = await bcrypt.hash(req.body.password, 10);
+        user.password = hashedPassword;
         await user.save();
-        user.password = undefined;
+        user.password = undefined; // Remove password from response
 
-        res.status(201).json({
+        return res.status(200).json({
           status: true,
           message: "Password changed successfully.",
         });
       } else {
-        res.status(404).json({ status: false, message: "User not found" });
+        return res
+          .status(404)
+          .json({ status: false, message: "User not found" });
       }
     } catch (error) {
-      console.log(error);
-      return res.status(400).json({ status: false, message: error.message });
+      console.error(error);
+      return res.status(500).json({ status: false, message: "Server error" });
     }
   },
 
@@ -208,31 +224,38 @@ export const userController = {
         user.isActive = req.body.isActive;
         await user.save();
 
-        res.status(201).json({
+        return res.status(200).json({
           status: true,
           message: `User account has been ${
-            user?.isActive ? "activated" : "disabled"
+            user.isActive ? "activated" : "disabled"
           }`,
         });
       } else {
-        res.status(404).json({ status: false, message: "User not found" });
+        return res
+          .status(404)
+          .json({ status: false, message: "User not found" });
       }
     } catch (error) {
-      console.log(error);
-      return res.status(400).json({ status: false, message: error.message });
+      console.error(error);
+      return res.status(500).json({ status: false, message: "Server error" });
     }
   },
 
   deleteUserProfile: async (req, res) => {
     try {
       const { id } = req.params;
-      await User.findByIdAndDelete(id);
-      res
-        .status(200)
+      const deletedUser = await User.findByIdAndDelete(id);
+      if (!deletedUser) {
+        return res
+          .status(404)
+          .json({ status: false, message: "User not found" });
+      }
+      return res
+        .status(204)
         .json({ status: true, message: "User deleted successfully" });
     } catch (error) {
-      console.log(error);
-      return res.status(400).json({ status: false, message: error.message });
+      console.error(error);
+      return res.status(500).json({ status: false, message: "Server error" });
     }
   },
 };

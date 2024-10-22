@@ -40,13 +40,11 @@ export const createTask = async (req, res) => {
       .json({ status: true, task, message: "Task created successfully." });
   } catch (error) {
     console.error(error);
-    res
-      .status(500)
-      .json({
-        status: false,
-        message: "Error creating task",
-        error: error.message,
-      });
+    res.status(500).json({
+      status: false,
+      message: "Error creating task",
+      error: error.message,
+    });
   }
 };
 
@@ -77,13 +75,11 @@ export const duplicateTask = async (req, res) => {
       .json({ status: true, message: "Task duplicated successfully." });
   } catch (error) {
     console.error(error);
-    res
-      .status(500)
-      .json({
-        status: false,
-        message: "Error duplicating task",
-        error: error.message,
-      });
+    res.status(500).json({
+      status: false,
+      message: "Error duplicating task",
+      error: error.message,
+    });
   }
 };
 
@@ -103,13 +99,11 @@ export const postTaskActivity = async (req, res) => {
       .json({ status: true, message: "Activity posted successfully." });
   } catch (error) {
     console.error(error);
-    res
-      .status(500)
-      .json({
-        status: false,
-        message: "Error posting activity",
-        error: error.message,
-      });
+    res.status(500).json({
+      status: false,
+      message: "Error posting activity",
+      error: error.message,
+    });
   }
 };
 
@@ -155,13 +149,11 @@ export const dashboardStatistics = async (req, res) => {
     res.status(200).json({ status: true, message: "Success", ...summary });
   } catch (error) {
     console.error(error);
-    res
-      .status(500)
-      .json({
-        status: false,
-        message: "Error retrieving dashboard statistics",
-        error: error.message,
-      });
+    res.status(500).json({
+      status: false,
+      message: "Error retrieving dashboard statistics",
+      error: error.message,
+    });
   }
 };
 
@@ -182,13 +174,11 @@ export const getTasks = async (req, res) => {
     res.status(200).json({ status: true, tasks });
   } catch (error) {
     console.error(error);
-    res
-      .status(500)
-      .json({
-        status: false,
-        message: "Error retrieving tasks",
-        error: error.message,
-      });
+    res.status(500).json({
+      status: false,
+      message: "Error retrieving tasks",
+      error: error.message,
+    });
   }
 };
 
@@ -203,13 +193,11 @@ export const getTask = async (req, res) => {
     res.status(200).json({ status: true, task });
   } catch (error) {
     console.error(error);
-    res
-      .status(500)
-      .json({
-        status: false,
-        message: "Error retrieving task",
-        error: error.message,
-      });
+    res.status(500).json({
+      status: false,
+      message: "Error retrieving task",
+      error: error.message,
+    });
   }
 };
 
@@ -230,13 +218,11 @@ export const createSubTask = async (req, res) => {
       .json({ status: true, message: "SubTask added successfully." });
   } catch (error) {
     console.error(error);
-    res
-      .status(500)
-      .json({
-        status: false,
-        message: "Error adding subtask",
-        error: error.message,
-      });
+    res.status(500).json({
+      status: false,
+      message: "Error adding subtask",
+      error: error.message,
+    });
   }
 };
 
@@ -261,13 +247,11 @@ export const updateTask = async (req, res) => {
       .json({ status: true, message: "Task updated successfully." });
   } catch (error) {
     console.error(error);
-    res
-      .status(500)
-      .json({
-        status: false,
-        message: "Error updating task",
-        error: error.message,
-      });
+    res.status(500).json({
+      status: false,
+      message: "Error updating task",
+      error: error.message,
+    });
   }
 };
 
@@ -285,13 +269,11 @@ export const trashTask = async (req, res) => {
       .json({ status: true, message: "Task trashed successfully." });
   } catch (error) {
     console.error(error);
-    res
-      .status(500)
-      .json({
-        status: false,
-        message: "Error trashing task",
-        error: error.message,
-      });
+    res.status(500).json({
+      status: false,
+      message: "Error trashing task",
+      error: error.message,
+    });
   }
 };
 
@@ -320,12 +302,10 @@ export const deleteRestoreTask = async (req, res) => {
       .json({ status: true, message: "Operation performed successfully." });
   } catch (error) {
     console.error(error);
-    res
-      .status(500)
-      .json({
-        status: false,
-        message: "Error performing operation",
-        error: error.message,
-      });
+    res.status(500).json({
+      status: false,
+      message: "Error performing operation",
+      error: error.message,
+    });
   }
 };

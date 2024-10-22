@@ -12,11 +12,11 @@ import moment from "moment";
 import { summary } from "../assets/data";
 import clsx from "clsx";
 import Chart from "../components/Chart";
-
 import { BGS, PRIOTITYSTYELS, TASK_TYPE, getInitials } from "../utils";
 import UserInfo from "../components/UserInfo";
 import { useGetDashboardStatsQuery } from "../redux/slices/api/taskApiSlice";
 import Loading from "../components/Loding";
+import PropTypes from 'prop-types';
 
 const TaskTable = ({ tasks }) => {
   const ICONS = {
@@ -43,7 +43,6 @@ const TaskTable = ({ tasks }) => {
           <div
             className={clsx("w-4 h-4 rounded-full", TASK_TYPE[task.stage])}
           />
-
           <p className="text-base text-black">{task.title}</p>
         </div>
       </td>
@@ -94,6 +93,10 @@ const TaskTable = ({ tasks }) => {
   );
 };
 
+TaskTable.propTypes = {
+  tasks: PropTypes.array.isRequired,
+};
+
 const UserTable = ({ users }) => {
   const TableHeader = () => (
     <thead className="border-b border-gray-300 ">
@@ -112,7 +115,6 @@ const UserTable = ({ users }) => {
           <div className="w-9 h-9 rounded-full text-white flex items-center justify-center text-sm bg-violet-700">
             <span className="text-center">{getInitials(user?.name)}</span>
           </div>
-
           <div>
             <p>{user.name}</p>
             <span className="text-xs text-black">{user?.role}</span>
@@ -148,13 +150,25 @@ const UserTable = ({ users }) => {
   );
 };
 
+UserTable.propTypes = {
+  users: PropTypes.array.isRequired,
+};
+
 const Dashboard = () => {
-  const { data, isLoading } = useGetDashboardStatsQuery();
+  const { data, isLoading, isError } = useGetDashboardStatsQuery();
 
   if (isLoading) {
     return (
       <div className="py-10">
         <Loading />
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="py-10 text-red-500">
+        Failed to load data.
       </div>
     );
   }

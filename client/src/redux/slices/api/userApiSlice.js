@@ -14,6 +14,17 @@ export const authApiSlice = apiSlice.injectEndpoints({
         body: data,
         credentials: "include",
       }),
+      async onQueryStarted(arg, { dispatch, queryFulfilled }) {
+        try {
+          const { data } = await queryFulfilled;
+          if (data.token) {
+            localStorage.setItem("token", data.token); // Store token
+          }
+        } catch (error) {
+          console.error("Login failed:", error);
+          // Handle login failure if needed (e.g., show error message)
+        }
+      },
     }),
     register: builder.mutation({
       query: (data) => ({
@@ -22,6 +33,17 @@ export const authApiSlice = apiSlice.injectEndpoints({
         body: data,
         credentials: "include",
       }),
+      async onQueryStarted(arg, { queryFulfilled }) {
+        try {
+          const { data } = await queryFulfilled;
+          if (data.token) {
+            localStorage.setItem("token", data.token); // Store token on successful registration
+          }
+        } catch (error) {
+          console.error("Registration failed:", error);
+          // Handle registration failure if needed
+        }
+      },
     }),
     logout: builder.mutation({
       query: () => ({
@@ -29,6 +51,15 @@ export const authApiSlice = apiSlice.injectEndpoints({
         method: "POST",
         credentials: "include",
       }),
+      async onQueryStarted(arg, { dispatch, queryFulfilled }) {
+        try {
+          await queryFulfilled;
+          localStorage.removeItem("token"); // Remove token on logout
+          dispatch(logout()); // Dispatch logout action to clear auth state
+        } catch (error) {
+          console.error("Logout failed:", error);
+        }
+      },
     }),
   }),
 });
@@ -66,7 +97,6 @@ export const userApiSlice = apiSlice.injectEndpoints({
         credentials: "include",
       }),
     }),
-
     getNotification: builder.query({
       query: () => ({
         url: `${USER_URL}/notification`,
@@ -74,15 +104,13 @@ export const userApiSlice = apiSlice.injectEndpoints({
         credentials: "include",
       }),
     }),
-
     markNotiAsRead: builder.mutation({
-      query: (id) => ({
-        url: `${USER_URL}/read-noti?isReadType=${data.type}&id=${data}/${id}`,
+      query: ({ id, type }) => ({
+        url: `${USER_URL}/read-noti?id=${id}&isReadType=${type}`, // Fixed query URL
         method: "PUT",
         credentials: "include",
       }),
     }),
-
     changePassword: builder.mutation({
       query: (data) => ({
         url: `${USER_URL}/change-password`,
@@ -108,6 +136,7 @@ export const {
   useChangePasswordMutation,
 } = userApiSlice;
 
+// Optional: action to clear user state on logout
 export const logoutUser = () => {
-  return { type: logout };
+  return { type: logout }; // If you have a specific action for logout, use it here
 };

@@ -25,13 +25,18 @@ const Login = () => {
     try {
       const result = await login(data).unwrap();
 
+      // Store the token in local storage
+      localStorage.setItem("token", result.token);
+
+      // Dispatch the credentials to the Redux store
       dispatch(setCredentials(result));
       navigate("/");
 
       console.log(result);
     } catch (error) {
       console.log(error);
-      toast.error(error?.data?.message || error.error);
+      // Uncomment the line below if you have toast notifications set up
+      // toast.error(error?.data?.message || error.error);
     }
   };
 

@@ -19,7 +19,7 @@ const Users = () => {
   const [openAction, setOpenAction] = useState(false);
   const [selected, setSelected] = useState(null);
 
-  const { data, isLoading, refetch } = useGetTeamListQuery();
+  const { data, isLoading, isError, refetch } = useGetTeamListQuery();
   const [deleteUser] = useDeleteUserMutation();
   const [userAction] = useUserActionMutation();
 
@@ -102,6 +102,7 @@ const Users = () => {
             "w-fit px-4 py-1 rounded-full",
             user.isActive ? "bg-blue-200" : "bg-yellow-100"
           )}
+          aria-label={`Mark user as ${user.isActive ? "deactivate" : "activate"}`}
         >
           {user.isActive ? "Active" : "Disabled"}
         </button>
@@ -124,6 +125,8 @@ const Users = () => {
   );
 
   if (isLoading) return <div>Loading...</div>; // Loading state
+
+  if (isError) return <div>Error loading users.</div>; // Error state
 
   return (
     <>
