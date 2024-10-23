@@ -16,7 +16,8 @@ const getAuthHeaders = () => {
 const TASKS_URL = "/task";
 
 // Access environment variables properly using import.meta.env
-const API_BASE_URL = import.meta.env.VITE_APP_BASE_URL || window.location.origin;
+const API_BASE_URL =
+  import.meta.env.VITE_APP_BASE_URL || window.location.origin;
 
 // Task API slice
 export const taskApiSlice = apiSlice.injectEndpoints({
@@ -26,22 +27,23 @@ export const taskApiSlice = apiSlice.injectEndpoints({
         url: `${TASKS_URL}/dashboard`,
         method: "GET",
         credentials: "include",
-        headers: getAuthHeaders(), // Add authorization headers
+        headers: getAuthHeaders(),
       }),
+      // Optional: Provide a way to handle potential errors or loading states in your UI
     }),
 
     getAllTask: builder.query({
       query: ({ strQuery, isTrashed, search }) => {
-        const url = new URL(TASKS_URL, API_BASE_URL); // Use the base URL
+        const url = new URL(TASKS_URL, API_BASE_URL);
         url.searchParams.append("stage", strQuery);
         url.searchParams.append("isTrashed", isTrashed);
-        if (search) url.searchParams.append("search", search); // Only append if search is defined
+        if (search) url.searchParams.append("search", search);
 
         return {
-          url: url.pathname + url.search, // Return the complete URL
+          url: url.pathname + url.search,
           method: "GET",
           credentials: "include",
-          headers: getAuthHeaders(), // Add authorization headers
+          headers: getAuthHeaders(),
         };
       },
     }),
@@ -52,16 +54,14 @@ export const taskApiSlice = apiSlice.injectEndpoints({
         method: "POST",
         body: data,
         credentials: "include",
-        headers: getAuthHeaders(), // Add authorization headers
+        headers: getAuthHeaders(),
       }),
       async onQueryStarted(arg, { dispatch, queryFulfilled }) {
         try {
           const { data } = await queryFulfilled;
-          console.log("Task created successfully:", data); // Debugging point
-          // Handle successful task creation (e.g., dispatch an action)
+          console.log("Task created successfully:", data);
         } catch (error) {
-          console.error("Task creation failed:", error); // Debugging point
-          // Optionally handle error (e.g., show a notification)
+          console.error("Task creation failed:", error);
         }
       },
     }),
@@ -71,26 +71,24 @@ export const taskApiSlice = apiSlice.injectEndpoints({
         url: `${TASKS_URL}/duplicate/${id}`,
         method: "POST",
         credentials: "include",
-        headers: getAuthHeaders(), // Add authorization headers
+        headers: getAuthHeaders(),
       }),
     }),
 
     updateTask: builder.mutation({
       query: ({ id, ...data }) => ({
-        url: `${TASKS_URL}/up/${id}`,
+        url: `${TASKS_URL}/update/${id}`,
         method: "PUT",
         body: data,
         credentials: "include",
-        headers: getAuthHeaders(), // Add authorization headers
+        headers: getAuthHeaders(),
       }),
       async onQueryStarted(arg, { dispatch, queryFulfilled }) {
         try {
           const { data } = await queryFulfilled;
-          console.log("Task updated successfully:", data); // Debugging point
-          // Handle successful task update (e.g., dispatch an action)
+          console.log("Task updated successfully:", data);
         } catch (error) {
-          console.error("Task update failed:", error); // Debugging point
-          // Optionally handle error (e.g., show a notification)
+          console.error("Task update failed:", error);
         }
       },
     }),
@@ -100,17 +98,34 @@ export const taskApiSlice = apiSlice.injectEndpoints({
         url: `${TASKS_URL}/trash/${id}`,
         method: "PUT",
         credentials: "include",
-        headers: getAuthHeaders(), // Add authorization headers
+        headers: getAuthHeaders(),
       }),
     }),
 
     createSubTask: builder.mutation({
       query: ({ data, id }) => ({
-        url: `${TASKS_URL}/create-subtask/${id}`,
+        url: `${TASKS_URL}/subtasks/${id}`,
         method: "POST",
         body: data,
         credentials: "include",
-        headers: getAuthHeaders(), // Add authorization headers
+        headers: getAuthHeaders(),
+      }),
+    }),
+
+    getSigleTask: builder.query({
+      query: (id) => ({
+        url: `${TASKS_URL}/${id}`,
+        method: "GET",
+        credentials: "include",
+      }),
+    }),
+
+    postTaskActivity: builder.mutation({
+      query: ({ data, id }) => ({
+        url: `${TASKS_URL}/activity/${id}`,
+        method: "POST",
+        body: data,
+        credentials: "include",
       }),
     }),
   }),
@@ -125,4 +140,6 @@ export const {
   useUpdateTaskMutation,
   useTrashTaskMutation,
   useCreateSubTaskMutation,
+  useGetSigleTaskQuery,
+  usePostTaskActivityMutation,
 } = taskApiSlice;

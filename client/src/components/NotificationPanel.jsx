@@ -9,28 +9,8 @@ import {
   useGetNotificationQuery,
   useMarkNotiAsReadMutation,
 } from "../redux/slices/api/userApiSlice";
+import { toast } from "sonner";
 
-// Dummy data (can be removed in real use)
-const data = [
-  {
-    _id: "65c5bbf3787832cf99f28e6d",
-    text: "New task has been assigned to you...",
-    task: null,
-    notiType: "alert",
-    isRead: [],
-    createdAt: "2024-02-09T05:45:23.353Z",
-  },
-  {
-    _id: "65c5f12ab5204a81bde866ab",
-    text: "High priority task assigned to you.",
-    task: { title: "Test task" },
-    notiType: "alert",
-    isRead: [],
-    createdAt: "2024-02-09T09:32:26.810Z",
-  },
-];
-
-// Icon mapping
 const ICONS = {
   alert: (
     <HiBellAlert className="h-5 w-5 text-gray-600 group-hover:text-indigo-600" />
@@ -43,19 +23,18 @@ const ICONS = {
 const NotificationPanel = () => {
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState(null);
-
-  const { data, refetch } = useGetNotificationQuery();
-  const [markAsRead] = useMarkNotiAsReadMutation();
+  const { data = [], refetch } = useGetNotificationQuery(); // Fetch notifications
+  const [markAsRead] = useMarkNotiAsReadMutation(); // Mutation to mark as read
 
   const readHandler = async (type, id) => {
-    await markAsRead({ type, id }).unwrap();
-    refetch();
+    await markAsRead({ type, id }).unwrap(); // Mark notification as read
+    refetch(); // Refetch notifications after marking
   };
 
   const viewHandler = async (el) => {
-    setSelected(el);
-    readHandler("one", el._id);
-    setOpen(true);
+    setSelected(el); // Set the selected notification
+    readHandler("one", el._id); // Mark as read
+    setOpen(true); // Open the modal
   };
 
   const callsToAction = [
@@ -63,7 +42,7 @@ const NotificationPanel = () => {
     {
       name: "Mark All Read",
       href: "#",
-      onClick: () => readHandler("all", ""),
+      onClick: () => readHandler("all", ""), // Mark all as read
     },
   ];
 
@@ -73,9 +52,9 @@ const NotificationPanel = () => {
         <Popover.Button className="inline-flex items-center outline-none">
           <div className="w-8 h-8 flex items-center justify-center text-gray-800 relative">
             <IoIosNotificationsOutline className="text-2xl" />
-            {data?.length > 0 && (
+            {data.length > 0 && (
               <span className="absolute text-center top-0 right-1 text-sm text-white font-semibold w-4 h-4 rounded-full bg-red-600">
-                {data?.length}
+                {data.length}
               </span>
             )}
           </div>
@@ -92,10 +71,10 @@ const NotificationPanel = () => {
         >
           <Popover.Panel className="absolute -right-16 md:-right-2 z-10 mt-5 flex w-screen max-w-max px-4">
             {({ close }) =>
-              data?.length > 0 && (
+              data.length > 0 && (
                 <div className="w-screen max-w-md flex-auto overflow-hidden rounded-3xl bg-white text-sm leading-6 shadow-lg ring-1 ring-gray-900/5">
                   <div className="p-4">
-                    {data?.slice(0, 5).map((item, index) => (
+                    {data.slice(0, 5).map((item, index) => (
                       <div
                         key={item._id + index}
                         className="group relative flex gap-x-4 rounded-lg p-4 hover:bg-gray-50"

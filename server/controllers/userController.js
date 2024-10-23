@@ -16,7 +16,6 @@ export const userController = {
         });
       }
 
-      // Hash the password before saving
       const hashedPassword = await bcrypt.hash(password, 10);
 
       const user = await User.create({
@@ -28,10 +27,9 @@ export const userController = {
         title,
       });
 
-      // Optionally create JWT for newly registered users
       createJWT(res, user._id);
+      user.password = undefined;
 
-      user.password = undefined; // Remove password from response
       return res.status(201).json({
         status: true,
         message: "User registered successfully",
@@ -66,7 +64,7 @@ export const userController = {
 
       if (isMatch) {
         createJWT(res, user._id);
-        user.password = undefined; // Remove password from response
+        user.password = undefined;
         return res.status(200).json(user);
       } else {
         return res
@@ -85,7 +83,6 @@ export const userController = {
         httpOnly: true,
         expires: new Date(0),
       });
-
       return res
         .status(200)
         .json({ status: true, message: "Logout successful" });
@@ -97,10 +94,13 @@ export const userController = {
 
   getTeamList: async (req, res) => {
     try {
-      const users = await User.find().select("name title role email isActive");
+      const users = await User.find()
+        .select("name title role email isActive")
+        .sort({ name: 1 });
+
       return res.status(200).json(users);
     } catch (error) {
-      console.error(error);
+      console.error("Error fetching users:", error);
       return res.status(500).json({ status: false, message: "Server error" });
     }
   },
@@ -108,14 +108,24 @@ export const userController = {
   getNotificationsList: async (req, res) => {
     try {
       const { userId } = req.user;
+
+      if (!userId) {
+        return res
+          .status(400)
+          .json({ status: false, message: "User ID is required" });
+      }
+
       const notice = await Notice.find({
         team: userId,
         isRead: { $nin: [userId] },
-      }).populate("task", "title");
+      })
+        .populate("task", "title")
+        .sort({ createdAt: -1 })
+        .limit(20);
 
       return res.status(200).json(notice);
     } catch (error) {
-      console.error(error);
+      console.error("Error fetching notifications:", error);
       return res.status(500).json({ status: false, message: "Server error" });
     }
   },
@@ -123,32 +133,50 @@ export const userController = {
   updateUserProfile: async (req, res) => {
     try {
       const { userId, isAdmin } = req.user;
-      const { _id, name, title, role } = req.body;
+      const { _id, name, title, role, email } = req.body;
 
-      const id = isAdmin && userId === _id ? userId : _id || userId;
+      const id = isAdmin && _id ? _id : userId;
 
       const user = await User.findById(id);
-
-      if (user) {
-        user.name = name || user.name;
-        user.title = title || user.title;
-        user.role = role || user.role;
-
-        const updatedUser = await user.save();
-        updatedUser.password = undefined; // Remove password from response
-
-        return res.status(200).json({
-          status: true,
-          message: "Profile updated successfully.",
-          user: updatedUser,
-        });
-      } else {
+      if (!user) {
         return res
           .status(404)
           .json({ status: false, message: "User not found" });
       }
+
+      if (name && typeof name !== "string") {
+        return res.status(400).json({ status: false, message: "Invalid name" });
+      }
+      if (title && typeof title !== "string") {
+        return res
+          .status(400)
+          .json({ status: false, message: "Invalid title" });
+      }
+      if (role && typeof role !== "string") {
+        return res.status(400).json({ status: false, message: "Invalid role" });
+      }
+      if (email && typeof email !== "string") {
+        return res
+          .status(400)
+          .json({ status: false, message: "Invalid email" });
+      }
+
+      user.name = name || user.name;
+      user.title = title || user.title;
+      user.role = role || user.role;
+      user.email = email || user.email;
+
+      const updatedUser = await user.save();
+
+      updatedUser.password = undefined;
+
+      return res.status(200).json({
+        status: true,
+        message: "Profile updated successfully.",
+        user: updatedUser,
+      });
     } catch (error) {
-      console.error(error);
+      console.error("Error updating profile:", error);
       return res.status(500).json({ status: false, message: "Server error" });
     }
   },
@@ -161,22 +189,20 @@ export const userController = {
       if (isReadType === "all") {
         await Notice.updateMany(
           { team: userId, isRead: { $nin: [userId] } },
-          { $addToSet: { isRead: userId } } // Use $addToSet to prevent duplicates
+          { $addToSet: { isRead: userId } }
         );
       } else {
         const notification = await Notice.findOneAndUpdate(
           { _id: id, isRead: { $nin: [userId] } },
-          { $addToSet: { isRead: userId } }, // Use $addToSet to prevent duplicates
+          { $addToSet: { isRead: userId } },
           { new: true }
         );
 
         if (!notification) {
-          return res
-            .status(404)
-            .json({
-              status: false,
-              message: "Notification not found or already read.",
-            });
+          return res.status(404).json({
+            status: false,
+            message: "Notification not found or already read.",
+          });
         }
       }
 
@@ -190,6 +216,7 @@ export const userController = {
   },
 
   changeUserPassword: async (req, res) => {
+    console.log(req);
     try {
       const { userId } = req.user;
       const user = await User.findById(userId);
@@ -198,7 +225,7 @@ export const userController = {
         const hashedPassword = await bcrypt.hash(req.body.password, 10);
         user.password = hashedPassword;
         await user.save();
-        user.password = undefined; // Remove password from response
+        user.password = undefined;
 
         return res.status(200).json({
           status: true,
@@ -245,13 +272,15 @@ export const userController = {
     try {
       const { id } = req.params;
       const deletedUser = await User.findByIdAndDelete(id);
+
       if (!deletedUser) {
         return res
           .status(404)
           .json({ status: false, message: "User not found" });
       }
+
       return res
-        .status(204)
+        .status(200)
         .json({ status: true, message: "User deleted successfully" });
     } catch (error) {
       console.error(error);

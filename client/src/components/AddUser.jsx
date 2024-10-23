@@ -28,6 +28,7 @@ const AddUser = ({ open, setOpen, userData }) => {
   const handleOnSubmit = async (data) => {
     try {
       if (userData) {
+        console.log("Updating user with data:", data); // Debugging log
         const result = await updateUser(data).unwrap();
         toast.success("Profile updated successfully");
 
@@ -35,6 +36,7 @@ const AddUser = ({ open, setOpen, userData }) => {
           dispatch(setCredentials({ ...result, user }));
         }
       } else {
+        console.log("Adding new user with data:", data); // Debugging log
         await addNewUser({
           ...data,
           password: data.email, // Ensure password handling is secure
@@ -43,13 +45,11 @@ const AddUser = ({ open, setOpen, userData }) => {
         toast.success("New user added successfully");
       }
 
-      // Close the modal after a short delay
       setTimeout(() => {
         setOpen(false);
       }, 500);
     } catch (error) {
-      console.error("Error occurred:", error);
-      // Check if there's a specific message returned by the API
+      console.error("Error occurred:", error); // More detailed log for server errors
       const errorMessage = error?.data?.message || "Something went wrong";
       toast.error(errorMessage);
     }

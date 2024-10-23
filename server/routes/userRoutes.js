@@ -25,7 +25,7 @@ router.put("/profile", userController.updateUserProfile);
 router.put("/notifications/read", userController.markNotificationRead); // Changed to plural for consistency
 
 // Change user password
-router.put("/password", userController.changeUserPassword);
+router.put("/change-password", userController.changeUserPassword);
 
 // Activate user profile by ID
 router.put("/activate/:id", userController.activateUserProfile);

@@ -22,13 +22,10 @@ router.post("/create", protectRoute, isAdminRoute, createTask);
 router.post("/duplicate/:id", protectRoute, isAdminRoute, duplicateTask);
 
 // Update Task - PUT /api/task/update/:id
-// router.put("/update/:id", protectRoute, isAdminRoute, updateTask);
-// Update Task - PUT /api/task/update/:id
 router.put("/update/:id", protectRoute, isAdminRoute, updateTask);
 
-
-// Create Subtask - PUT /api/task/create-subtask/:id
-router.put("/create-subtask/:id", protectRoute, isAdminRoute, createSubTask);
+// Create Subtask - POST /api/task/subtasks/:id
+router.post("/subtasks/:id", protectRoute, isAdminRoute, createSubTask);
 
 // Post Task Activity - POST /api/task/activity/:id
 router.post("/activity/:id", protectRoute, postTaskActivity);
@@ -42,8 +39,8 @@ router.get("/", protectRoute, getTasks);
 // Get a Specific Task - GET /api/task/:id
 router.get("/:id", protectRoute, getTask);
 
-// Trash a Task - PUT /api/task/:id
-router.put("/:id", protectRoute, isAdminRoute, trashTask);
+// Trash a Task - PUT /api/task/trash/:id
+router.put("/trash/:id", protectRoute, isAdminRoute, trashTask);
 
 // Delete or Restore Task - DELETE /api/task/delete-restore/:id?
 router.delete(

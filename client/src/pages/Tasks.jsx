@@ -26,12 +26,11 @@ const TASK_TYPE = {
 
 const Tasks = () => {
   const params = useParams();
-  const [selectedTab, setSelectedTab] = useState(0); // Renamed for clarity
+  const [selectedTab, setSelectedTab] = useState(0);
   const [open, setOpen] = useState(false);
-
   const status = params?.status || "";
 
-  const { data, isLoading } = useGetAllTaskQuery({
+  const { data, isLoading, error } = useGetAllTaskQuery({
     strQuery: status,
     isTrashed: "",
     search: "",
@@ -45,14 +44,21 @@ const Tasks = () => {
     );
   }
 
+  if (error) {
+    return (
+      <div className="py-10 text-center">
+        <p>Error loading tasks. Please try again later.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full">
       <div className="flex items-center justify-between mb-4">
         <Title title={status ? `${status} Tasks` : "Tasks"} />
-
         {!status && (
           <Button
-            label="Create Task" // Corrected spelling
+            label="Create Task"
             icon={<IoMdAdd className="text-lg" />}
             className="flex flex-row-reverse gap-1 items-center bg-blue-600 text-white rounded-md py-2 2xl:py-2.5"
             onClick={() => setOpen(true)} // Open the AddTask modal
@@ -65,12 +71,15 @@ const Tasks = () => {
           {!status && (
             <div className="w-full flex justify-between gap-4 md:gap-x-12 py-4">
               <TaskTitle label="To Do" className={TASK_TYPE.todo} />
-              <TaskTitle label="In Progress" className={TASK_TYPE["in progress"]} />
+              <TaskTitle
+                label="In Progress"
+                className={TASK_TYPE["in progress"]}
+              />
               <TaskTitle label="Completed" className={TASK_TYPE.completed} />
             </div>
           )}
 
-          {data?.tasks?.length === 0 ? ( // Check if there are no tasks
+          {data?.tasks?.length === 0 ? (
             <div className="text-center py-4">
               <p>No tasks available.</p>
             </div>

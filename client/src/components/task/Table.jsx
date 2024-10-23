@@ -13,6 +13,8 @@ import { FaList } from "react-icons/fa";
 import UserInfo from "../UserInfo";
 import Button from "../Button";
 import ConfirmatioDialog from "../Dialogs";
+import { useTrashTaskMutation } from "../../redux/slices/api/taskApiSlice";
+import AddTask from "./AddTask";
 
 const ICONS = {
   high: <MdKeyboardDoubleArrowUp />,
@@ -20,17 +22,41 @@ const ICONS = {
   low: <MdKeyboardArrowDown />,
 };
 
-const Table = ({ tasks = [] }) => { // Default tasks to an empty array
+const Table = ({ tasks = [] }) => {
   const [openDialog, setOpenDialog] = useState(false);
   const [selected, setSelected] = useState(null);
+  const [openEdit, setOpenEdit] = useState(false);
+
+  const [trashTask] = useTrashTaskMutation();
+
+  const editTaskHandler = (el) => {
+    setSelected(el);
+    setOpenEdit(true);
+  };
 
   const deleteClicks = (id) => {
     setSelected(id);
     setOpenDialog(true);
   };
 
-  const deleteHandler = () => {
-    // Implement delete logic here
+  const deleteHandler = async () => {
+    try {
+      const result = await trashTask({
+        id: selected,
+        isTrash: "trash",
+      }).unwrap();
+      toast.success(result.message);
+
+      setTimeout(() => {
+        setOpenDialog(false);
+        window.location.reload();
+      }, 500);
+    } catch (error) {
+      console.log(error);
+      toast.error(
+        error?.data?.message || "An error occurred while deleting the task."
+      );
+    }
   };
 
   const TableHeader = () => (
@@ -59,7 +85,7 @@ const Table = ({ tasks = [] }) => { // Default tasks to an empty array
       </td>
 
       <td className="py-2">
-        <div className={"flex gap-1 items-center"}>
+        <div className="flex gap-1 items-center">
           <span className={clsx("text-lg", PRIOTITYSTYELS[task?.priority])}>
             {ICONS[task?.priority]}
           </span>
@@ -81,11 +107,11 @@ const Table = ({ tasks = [] }) => { // Default tasks to an empty array
             <BiMessageAltDetail />
             <span>{task?.activities?.length}</span>
           </div>
-          <div className="flex gap-1 items-center text-sm text-gray-600 dark:text-gray-400">
+          <div className="flex gap-1 items-center text-sm text-gray-600">
             <MdAttachFile />
             <span>{task?.assets?.length}</span>
           </div>
-          <div className="flex gap-1 items-center text-sm text-gray-600 dark:text-gray-400">
+          <div className="flex gap-1 items-center text-sm text-gray-600">
             <FaList />
             <span>0/{task?.subTasks?.length}</span>
           </div>
@@ -94,12 +120,12 @@ const Table = ({ tasks = [] }) => { // Default tasks to an empty array
 
       <td className="py-2">
         <div className="flex">
-          {task?.team?.map((m, index) => ( // Pass index here
+          {task?.team?.map((m, index) => (
             <div
               key={m._id}
               className={clsx(
                 "w-7 h-7 rounded-full text-white flex items-center justify-center text-sm -mr-1",
-                BGS[index % BGS.length] // Use the index here
+                BGS[index % BGS.length]
               )}
             >
               <UserInfo user={m} />
@@ -113,6 +139,7 @@ const Table = ({ tasks = [] }) => { // Default tasks to an empty array
           className="text-blue-600 hover:text-blue-500 sm:px-0 text-sm md:text-base"
           label="Edit"
           type="button"
+          onClick={() => editTaskHandler(task)}
         />
 
         <Button
@@ -133,9 +160,7 @@ const Table = ({ tasks = [] }) => { // Default tasks to an empty array
             <TableHeader />
             <tbody>
               {tasks.length ? (
-                tasks.map((task) => (
-                  <TableRow key={task._id} task={task} />
-                ))
+                tasks.map((task) => <TableRow key={task._id} task={task} />)
               ) : (
                 <tr>
                   <td colSpan={5} className="py-4 text-center text-gray-600">
@@ -148,11 +173,17 @@ const Table = ({ tasks = [] }) => { // Default tasks to an empty array
         </div>
       </div>
 
-      {/* TODO */}
       <ConfirmatioDialog
         open={openDialog}
         setOpen={setOpenDialog}
         onClick={deleteHandler}
+      />
+
+      <AddTask
+        open={openEdit}
+        setOpen={setOpenEdit}
+        task={selected} // Pass the selected task
+        key={new Date().getTime()} // Ensure the key is unique to force component update
       />
     </>
   );
